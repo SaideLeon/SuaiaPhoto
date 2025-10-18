@@ -1,0 +1,16 @@
+{
+  "short_name": "SuaíaPhoto",
+  "name": "SuaíaPhoto",
+  "description": "Um aplicativo que permite aos usuários enviar uma imagem, selecionar um modelo de prompt de edição e usar a IA Gemini para gerar uma nova versão da imagem com base no estilo selecionado.",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#111827",
+  "background_color": "#111827"
+}

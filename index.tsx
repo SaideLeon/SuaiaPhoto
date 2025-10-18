@@ -14,3 +14,15 @@ root.render(
     <App />
   </React.StrictMode>
 );
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.ts')
+      .then(registration => {
+        console.log('Service Worker registrado com sucesso:', registration);
+      })
+      .catch(registrationError => {
+        console.log('Falha ao registrar o Service Worker:', registrationError);
+      });
+  });
+}

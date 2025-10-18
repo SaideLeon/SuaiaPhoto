@@ -11,6 +11,8 @@ Bem-vindo ao **SuaíaPhoto**! Uma ferramenta de edição de imagens com IA que p
 - **Geração com IA**: Utiliza o modelo `gemini-2.5-flash-image` para realizar edições de imagem de alta qualidade.
 - **Download Fácil**: Baixe suas criações com um único clique.
 - **Interface Intuitiva**: Um design limpo e responsivo construído com React e Tailwind CSS.
+- **Instalável (PWA)**: Adicione o SuaíaPhoto à sua tela inicial para acesso rápido, como um aplicativo nativo.
+- **Funcionalidade Offline**: A aplicação principal carrega instantaneamente e funciona offline, graças ao cache do service worker.
 
 ## 🚀 Como Usar
 
@@ -32,6 +34,9 @@ O processo é simples e direto:
   - [Tailwind CSS](https://tailwindcss.com/)
 - **API de IA**:
   - [Google Gemini API](https://ai.google.dev/)
+- **PWA**:
+  - Service Worker
+  - Web App Manifest
 
 ## 📁 Estrutura do Projeto
 
@@ -44,8 +49,10 @@ O processo é simples e direto:
 ├── icon.svg            # Ícone da aplicação
 ├── index.html          # Ponto de entrada HTML
 ├── index.tsx           # Ponto de entrada do React
+├── manifest.json       # Manifest do PWA
 ├── metadata.json       # Metadados do projeto
 ├── README.md           # Este arquivo
+├── service-worker.ts   # Service worker para PWA e funcionalidade offline
 └── types.ts            # Definições de tipos TypeScript
 ```
 
