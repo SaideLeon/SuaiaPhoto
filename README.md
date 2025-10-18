@@ -1,11 +1,52 @@
-<div align="center">
+# 🎨 SuaíaPhoto
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+Bem-vindo ao **SuaíaPhoto**! Uma ferramenta de edição de imagens com IA que permite transformar suas fotos em obras de arte com estilos pré-definidos. Envie uma imagem, escolha um modelo, personalize os detalhes e deixe que o poder do Gemini da Google crie uma nova versão para você.
 
-  <h1>Built with AI Studio</h2>
+## ✨ Funcionalidades
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+- **Upload de Imagem**: Envie facilmente suas próprias fotos (JPG, PNG, WebP) para começar a editar.
+- **Seleção de Estilos**: Escolha entre uma variedade de modelos de prompts criativos, como "Paisagem Urbana Cyberpunk", "Retrato Vintage de Hollywood" e muito mais.
+- **Personalização Detalhada**: Ajuste o gênero para adaptar o prompt e descreva roupas personalizadas para obter resultados mais precisos.
+- **Modo de Edição Contínua**: Após cada geração, a imagem resultante se torna a nova base para edições futuras, permitindo um fluxo criativo rápido e iterativo sem a necessidade de reenviar a imagem.
+- **Geração com IA**: Utiliza o modelo `gemini-2.5-flash-image` para realizar edições de imagem de alta qualidade.
+- **Download Fácil**: Baixe suas criações com um único clique.
+- **Interface Intuitiva**: Um design limpo e responsivo construído com React e Tailwind CSS.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## 🚀 Como Usar
 
-</div>
+O processo é simples e direto:
+
+1.  **Envie sua Imagem**: Clique na área de upload e selecione uma foto do seu dispositivo.
+2.  **Escolha um Estilo**: Selecione um dos modelos disponíveis na lista suspensa.
+3.  **Defina o Gênero**: Escolha "Masculino" ou "Feminino" para garantir que o prompt de IA use os termos corretos.
+4.  **Personalize as Roupas (Opcional)**: Se desejar, descreva uma peça de roupa específica. Caso contrário, o estilo padrão do modelo será usado.
+5.  **Clique em "Gerar Imagem"**: A IA começará a processar sua solicitação.
+6.  **Continue Editando**: A nova imagem aparecerá no painel de resultados e se tornará a imagem original. Mude o estilo ou as opções e gere novamente para refinar ainda mais sua arte.
+7.  **Baixe sua Criação**: Use o botão "Baixar Imagem" para salvar o resultado final.
+
+## 🛠️ Tecnologias Utilizadas
+
+- **Frontend**:
+  - [React](https://react.dev/)
+  - [TypeScript](https://www.typescriptlang.org/)
+  - [Tailwind CSS](https://tailwindcss.com/)
+- **API de IA**:
+  - [Google Gemini API](https://ai.google.dev/)
+
+## 📁 Estrutura do Projeto
+
+```
+/
+├── components/         # Componentes React reutilizáveis (Header, Loader)
+├── services/           # Lógica de comunicação com a API Gemini
+├── App.tsx             # Componente principal da aplicação
+├── constants.ts        # Constantes, como os modelos de prompts
+├── icon.svg            # Ícone da aplicação
+├── index.html          # Ponto de entrada HTML
+├── index.tsx           # Ponto de entrada do React
+├── metadata.json       # Metadados do projeto
+├── README.md           # Este arquivo
+└── types.ts            # Definições de tipos TypeScript
+```
+
+Aproveite para soltar a sua criatividade com o **SuaíaPhoto**!

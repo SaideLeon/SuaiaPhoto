@@ -1,0 +1,5 @@
+{
+  "name": "SuaíaPhoto",
+  "description": "Um aplicativo que permite aos usuários enviar uma imagem, selecionar um modelo de prompt de edição e usar a IA Gemini para gerar uma nova versão da imagem com base no estilo selecionado.",
+  "requestFramePermissions": []
+}
