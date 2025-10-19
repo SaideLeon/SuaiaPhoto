@@ -53,6 +53,8 @@ const App: React.FC = () => {
   const [gender, setGender] = useState<Gender>('feminino');
   const [customClothing, setCustomClothing] = useState<string>('');
   const [marketingText, setMarketingText] = useState<string>('');
+  const [canShare, setCanShare] = useState<boolean>(false);
+
 
   // Efeito para carregar o estado do localStorage na montagem inicial do componente
   useEffect(() => {
@@ -120,6 +122,17 @@ const App: React.FC = () => {
 
     return () => clearTimeout(handler);
   }, [gender, customClothing, selectedTemplate, previewUrl, imageFile, clothingImagePreviewUrl, clothingImageFile, hairstyleImagePreviewUrl, hairstyleImageFile, marketingText]);
+
+  // Efeito para verificar o suporte à API de Compartilhamento Web
+  useEffect(() => {
+    if (navigator.share && navigator.canShare) {
+      // É necessário um arquivo de teste para verificar se o compartilhamento de arquivos é suportado
+      const dummyFile = new File([""], "dummy.png", { type: "image/png" });
+      if (navigator.canShare({ files: [dummyFile] })) {
+        setCanShare(true);
+      }
+    }
+  }, []);
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -197,6 +210,34 @@ const App: React.FC = () => {
       setIsLoading(false);
     }
   }, [imageFile, clothingImageFile, hairstyleImageFile, selectedTemplate, gender, customClothing, marketingText]);
+  
+  const handleShare = async () => {
+    if (!generatedImageUrl) return;
+
+    const file = dataURLtoFile(generatedImageUrl, 'imagem-gerada-pelo-suaiaphoto.png');
+    if (!file) {
+      setError('Não foi possível criar o arquivo para compartilhamento.');
+      return;
+    }
+
+    if (canShare) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: 'Minha Criação SuaíaPhoto',
+          text: 'Veja a imagem que criei com o SuaíaPhoto!',
+        });
+      } catch (err) {
+        // Ignora o erro se o usuário simplesmente cancelou o compartilhamento
+        if ((err as Error).name !== 'AbortError') {
+          console.error('Erro ao compartilhar:', err);
+          setError('Ocorreu um erro ao tentar compartilhar a imagem.');
+        }
+      }
+    } else {
+      setError('Seu navegador não suporta o compartilhamento de arquivos.');
+    }
+  };
 
   const isMarketingTemplate = selectedTemplate.title === 'Visionário de Marketing (Contratando)';
   const isPosterTemplate = selectedTemplate.title === 'Pôster de Moda (Vermelho)';
@@ -373,13 +414,29 @@ const App: React.FC = () => {
             )}
           </div>
           {generatedImageUrl && !isLoading && (
-            <a
-              href={generatedImageUrl}
-              download="imagem-gerada.png"
-              className="mt-6 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition"
-            >
-              Baixar Imagem
-            </a>
+            <div className="flex flex-col sm:flex-row gap-4 mt-6">
+              <a
+                href={generatedImageUrl}
+                download="imagem-gerada.png"
+                className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+                Salvar Imagem
+              </a>
+              {canShare && (
+                <button
+                  onClick={handleShare}
+                  className="flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-6 rounded-lg transition"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                  </svg>
+                  Compartilhar
+                </button>
+              )}
+            </div>
           )}
         </div>
       </main>
