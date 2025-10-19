@@ -14,7 +14,7 @@ const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
-export const editImageWithGemini = async (mainImageFile: File, clothingImageFile: File | null, prompt: string): Promise<string> => {
+export const editImageWithGemini = async (mainImageFile: File, clothingImageFile: File | null, hairstyleImageFile: File | null, prompt: string): Promise<string> => {
   if (!process.env.API_KEY) {
     throw new Error("API_KEY environment variable is not set.");
   }
@@ -37,6 +37,16 @@ export const editImageWithGemini = async (mainImageFile: File, clothingImageFile
       inlineData: {
         data: clothingImageBase64,
         mimeType: clothingImageFile.type,
+      },
+    });
+  }
+
+  if (hairstyleImageFile) {
+    const hairstyleImageBase64 = await fileToBase64(hairstyleImageFile);
+    parts.push({
+      inlineData: {
+        data: hairstyleImageBase64,
+        mimeType: hairstyleImageFile.type,
       },
     });
   }

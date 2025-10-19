@@ -1,3 +1,4 @@
+
 import React, { useState, ChangeEvent, useCallback, useEffect } from 'react';
 import Header from './components/Header';
 import Loader from './components/Loader';
@@ -43,12 +44,15 @@ const App: React.FC = () => {
   const [previewUrl, setPreviewUrl] = useState<string>(DEFAULT_IMAGE_URL);
   const [clothingImageFile, setClothingImageFile] = useState<File | null>(null);
   const [clothingImagePreviewUrl, setClothingImagePreviewUrl] = useState<string | null>(null);
+  const [hairstyleImageFile, setHairstyleImageFile] = useState<File | null>(null);
+  const [hairstyleImagePreviewUrl, setHairstyleImagePreviewUrl] = useState<string | null>(null);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<PromptTemplate>(PROMPT_TEMPLATES[0]);
   const [gender, setGender] = useState<Gender>('feminino');
   const [customClothing, setCustomClothing] = useState<string>('');
+  const [marketingText, setMarketingText] = useState<string>('');
 
   // Efeito para carregar o estado do localStorage na montagem inicial do componente
   useEffect(() => {
@@ -58,6 +62,7 @@ const App: React.FC = () => {
         const savedState = JSON.parse(savedStateJSON);
         if (savedState.gender) setGender(savedState.gender);
         if (savedState.customClothing) setCustomClothing(savedState.customClothing);
+        if (savedState.marketingText) setMarketingText(savedState.marketingText);
         if (savedState.selectedTemplateTitle) {
           const template = PROMPT_TEMPLATES.find(t => t.title === savedState.selectedTemplateTitle);
           if (template) setSelectedTemplate(template);
@@ -75,6 +80,13 @@ const App: React.FC = () => {
             if (file) {
                 setClothingImageFile(file);
             }
+        }
+        if (savedState.hairstyleImagePreviewUrl) {
+          setHairstyleImagePreviewUrl(savedState.hairstyleImagePreviewUrl);
+          const file = dataURLtoFile(savedState.hairstyleImagePreviewUrl, savedState.hairstyleImageName || 'restored-hairstyle-image.png');
+          if (file) {
+            setHairstyleImageFile(file);
+          }
         }
       } catch (e) {
         console.error("Falha ao carregar ou analisar o estado do localStorage", e);
@@ -94,17 +106,20 @@ const App: React.FC = () => {
       const stateToSave = {
         gender,
         customClothing,
+        marketingText,
         selectedTemplateTitle: selectedTemplate.title,
         previewUrl: previewUrl,
         imageName: imageFile?.name,
         clothingImagePreviewUrl: clothingImagePreviewUrl,
         clothingImageName: clothingImageFile?.name,
+        hairstyleImagePreviewUrl: hairstyleImagePreviewUrl,
+        hairstyleImageName: hairstyleImageFile?.name,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
     }, 100);
 
     return () => clearTimeout(handler);
-  }, [gender, customClothing, selectedTemplate, previewUrl, imageFile, clothingImagePreviewUrl, clothingImageFile]);
+  }, [gender, customClothing, selectedTemplate, previewUrl, imageFile, clothingImagePreviewUrl, clothingImageFile, hairstyleImagePreviewUrl, hairstyleImageFile, marketingText]);
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -134,6 +149,21 @@ const App: React.FC = () => {
     setClothingImagePreviewUrl(null);
   };
 
+  const handleHairstyleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        fileToDataURL(file).then(dataUrl => {
+            setHairstyleImagePreviewUrl(dataUrl);
+            setHairstyleImageFile(file);
+        });
+    }
+  };
+
+  const handleRemoveHairstyleImage = () => {
+    setHairstyleImageFile(null);
+    setHairstyleImagePreviewUrl(null);
+  };
+
   const handleGenerate = useCallback(async () => {
     if (!imageFile) {
       setError("Por favor, envie uma imagem primeiro.");
@@ -145,8 +175,8 @@ const App: React.FC = () => {
     setGeneratedImageUrl(null);
 
     try {
-      const prompt = selectedTemplate.prompt(gender, customClothing || undefined, !!clothingImageFile);
-      const resultUrl = await editImageWithGemini(imageFile, clothingImageFile, prompt);
+      const prompt = selectedTemplate.prompt(gender, customClothing || undefined, !!clothingImageFile, !!hairstyleImageFile, marketingText || undefined);
+      const resultUrl = await editImageWithGemini(imageFile, clothingImageFile, hairstyleImageFile, prompt);
       
       setGeneratedImageUrl(resultUrl);
       setPreviewUrl(resultUrl);
@@ -166,7 +196,13 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [imageFile, clothingImageFile, selectedTemplate, gender, customClothing]);
+  }, [imageFile, clothingImageFile, hairstyleImageFile, selectedTemplate, gender, customClothing, marketingText]);
+
+  const isMarketingTemplate = selectedTemplate.title === 'Visionário de Marketing (Contratando)';
+  const isPosterTemplate = selectedTemplate.title === 'Pôster de Moda (Vermelho)';
+  const hasCustomTextInput = isMarketingTemplate || isPosterTemplate;
+  const stepOffset = hasCustomTextInput ? 1 : 0;
+
 
   return (
     <div className="bg-gray-900 h-screen text-white font-sans flex flex-col">
@@ -191,7 +227,7 @@ const App: React.FC = () => {
             <label className="block text-lg font-medium text-gray-300 mb-2">
               2. Escolha um Estilo
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2">
               {PROMPT_TEMPLATES.map(template => (
                 <button
                   key={template.title}
@@ -228,10 +264,27 @@ const App: React.FC = () => {
               </button>
             </div>
           </div>
+          
+          {hasCustomTextInput && (
+            <div>
+              <label htmlFor="marketing-text" className="block text-lg font-medium text-gray-300 mb-2">
+                4. Texto da Imagem (Opcional)
+              </label>
+              <textarea
+                id="marketing-text"
+                rows={3}
+                value={marketingText}
+                onChange={(e) => setMarketingText(e.target.value)}
+                placeholder={isPosterTemplate ? "Ex: MAKE IT HAPPEN." : "Ex: WE'RE HIRING, com 'HIRING' em destaque"}
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <p className="text-sm text-gray-500 mt-1">Deixe em branco para o texto padrão.</p>
+            </div>
+          )}
 
           <div>
             <label htmlFor="custom-clothing" className="block text-lg font-medium text-gray-300 mb-2">
-              4. Roupas (Opcional)
+              {4 + stepOffset}. Roupas (Opcional)
             </label>
             <input
               id="custom-clothing"
@@ -251,7 +304,7 @@ const App: React.FC = () => {
 
           <div>
             <label htmlFor="clothing-image-upload" className="block text-lg font-medium text-gray-300 mb-2">
-              5. Usar Roupa de uma Imagem (Opcional)
+             {5 + stepOffset}. Usar Roupa de uma Imagem (Opcional)
             </label>
             <input
               id="clothing-image-upload"
@@ -269,6 +322,28 @@ const App: React.FC = () => {
                 </div>
             )}
           </div>
+
+          <div>
+            <label htmlFor="hairstyle-image-upload" className="block text-lg font-medium text-gray-300 mb-2">
+              {6 + stepOffset}. Usar Cabelo de uma Imagem (Opcional)
+            </label>
+            <input
+              id="hairstyle-image-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleHairstyleImageChange}
+              className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-500 file:text-white hover:file:bg-pink-600 cursor-pointer"
+            />
+            {hairstyleImagePreviewUrl && (
+                <div className="mt-4 relative w-24">
+                    <img src={hairstyleImagePreviewUrl} alt="Pré-visualização do cabelo" className="rounded-lg w-full h-auto" />
+                    <button onClick={handleRemoveHairstyleImage} className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 text-xs w-6 h-6 flex items-center justify-center font-bold">
+                        X
+                    </button>
+                </div>
+            )}
+          </div>
+
 
           <button
             onClick={handleGenerate}
