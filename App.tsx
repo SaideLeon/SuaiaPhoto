@@ -38,7 +38,7 @@ const dataURLtoFile = (dataUrl: string, filename: string): File | null => {
   }
 };
 
-const STORAGE_KEY = 'suaiaPhotoAppState';
+const STORAGE_KEY = 'luxiaEstudioAppState';
 
 const ASPECT_RATIO_OPTIONS = [
     { label: 'Quadrado', value: '1:1', icon: <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4H20V20H4V4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
@@ -225,7 +225,7 @@ const App: React.FC = () => {
   const handleShare = async () => {
     if (!generatedImageUrl) return;
 
-    const file = dataURLtoFile(generatedImageUrl, 'imagem-gerada-pelo-suaiaphoto.png');
+    const file = dataURLtoFile(generatedImageUrl, 'imagem-gerada-pelo-luxiaestudio.png');
     if (!file) {
       setError('Não foi possível criar o arquivo para compartilhamento.');
       return;
@@ -235,8 +235,8 @@ const App: React.FC = () => {
       try {
         await navigator.share({
           files: [file],
-          title: 'Minha Criação SuaíaPhoto',
-          text: 'Veja a imagem que criei com o SuaíaPhoto!',
+          title: 'Minha Criação LuxiaEstudio',
+          text: 'Veja a imagem que criei com o LuxiaEstudio!',
         });
       } catch (err) {
         // Ignora o erro se o usuário simplesmente cancelou o compartilhamento
@@ -259,11 +259,11 @@ const App: React.FC = () => {
 
 
   return (
-    <div className="bg-gray-900 h-screen text-white font-sans flex flex-col">
+    <div className="bg-gray-900 min-h-screen text-white font-sans flex flex-col">
       <Header />
-      <main className="flex-1 flex flex-col md:flex-row overflow-hidden">
+      <main className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
         {/* Sidebar: Controles & Input */}
-        <div className="w-full md:w-[400px] flex-shrink-0 bg-gray-800 p-6 flex flex-col gap-6 overflow-y-auto">
+        <div className="order-2 md:order-1 w-full md:w-[400px] flex-shrink-0 bg-gray-800 p-4 md:p-6 flex flex-col gap-4 md:gap-6 md:overflow-y-auto">
           <div>
             <label htmlFor="image-upload" className="block text-lg font-medium text-gray-300 mb-2">
               1. Envie sua Imagem
@@ -432,8 +432,8 @@ const App: React.FC = () => {
         </div>
 
         {/* Conteúdo Principal: Pré-visualização & Resultado */}
-        <div className="flex-1 p-6 flex flex-col items-center justify-center min-h-0">
-          <h2 className="text-2xl font-semibold mb-2 text-center">Sua Criação</h2>
+        <div className="order-1 md:order-2 md:flex-1 p-4 md:p-6 flex flex-col items-center justify-start md:justify-center">
+          <h2 className="text-xl md:text-2xl font-semibold mb-2 text-center">Sua Criação</h2>
           <p className="text-gray-500 text-sm mb-4 text-center">Use o scroll do mouse ou o gesto de pinça para dar zoom.</p>
           {error && <p className="text-red-400 mb-4 text-center">{error}</p>}
 
@@ -453,7 +453,7 @@ const App: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-4 mt-6">
               <a
                 href={generatedImageUrl}
-                download="imagem-gerada.png"
+                download="imagem-gerada-luxiaestudio.png"
                 className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">

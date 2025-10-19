@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'suaiaphoto-cache-v1';
+const CACHE_NAME = 'luxiaestudio-cache-v1';
 const URLS_TO_CACHE = [
   './',
   './index.html',
