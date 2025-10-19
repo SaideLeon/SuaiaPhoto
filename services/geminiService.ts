@@ -14,28 +14,39 @@ const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
-export const editImageWithGemini = async (file: File, prompt: string): Promise<string> => {
+export const editImageWithGemini = async (mainImageFile: File, clothingImageFile: File | null, prompt: string): Promise<string> => {
   if (!process.env.API_KEY) {
     throw new Error("API_KEY environment variable is not set.");
   }
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-  const base64ImageData = await fileToBase64(file);
+  const mainImageBase64 = await fileToBase64(mainImageFile);
+
+  const parts: any[] = [
+    {
+      inlineData: {
+        data: mainImageBase64,
+        mimeType: mainImageFile.type,
+      },
+    },
+  ];
+
+  if (clothingImageFile) {
+    const clothingImageBase64 = await fileToBase64(clothingImageFile);
+    parts.push({
+      inlineData: {
+        data: clothingImageBase64,
+        mimeType: clothingImageFile.type,
+      },
+    });
+  }
+  
+  parts.push({ text: prompt });
 
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash-image',
     contents: {
-      parts: [
-        {
-          inlineData: {
-            data: base64ImageData,
-            mimeType: file.type,
-          },
-        },
-        {
-          text: prompt,
-        },
-      ],
+      parts: parts,
     },
     config: {
         responseModalities: [Modality.IMAGE],
