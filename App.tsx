@@ -2,6 +2,7 @@
 import React, { useState, ChangeEvent, useCallback, useEffect } from 'react';
 import Header from './components/Header';
 import Loader from './components/Loader';
+import ZoomableImage from './components/ZoomableImage';
 import { PROMPT_TEMPLATES, DEFAULT_IMAGE_URL } from './constants';
 import { editImageWithGemini } from './services/geminiService';
 import type { Gender, PromptTemplate } from './types';
@@ -39,6 +40,13 @@ const dataURLtoFile = (dataUrl: string, filename: string): File | null => {
 
 const STORAGE_KEY = 'suaiaPhotoAppState';
 
+const ASPECT_RATIO_OPTIONS = [
+    { label: 'Quadrado', value: '1:1', icon: <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4H20V20H4V4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+    { label: 'Story', value: '9:16', icon: <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 3H17C17.5523 3 18 3.44772 18 4V20C18 20.5523 17.5523 21 17 21H7C6.44772 21 6 20.5523 6 20V4C6 3.44772 6.44772 3 7 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+    { label: 'Pin', value: '2:3', icon: <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 2H18C19.1046 2 20 2.89543 20 4V20C20 21.1046 19.1046 22 18 22H6C4.89543 22 4 21.1046 4 20V4C4 2.89543 4.89543 2 6 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+    { label: 'Widescreen', value: '16:9', icon: <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 7V17C3 17.5523 3.44772 18 4 18H20C20.5523 18 21 17.5523 21 17V7C21 6.44772 20.5523 6 20 6H4C3.44772 6 3 6.44772 3 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+];
+
 const App: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(DEFAULT_IMAGE_URL);
@@ -51,6 +59,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<PromptTemplate>(PROMPT_TEMPLATES[0]);
   const [gender, setGender] = useState<Gender>('feminino');
+  const [aspectRatio, setAspectRatio] = useState<string>('1:1');
   const [customClothing, setCustomClothing] = useState<string>('');
   const [marketingText, setMarketingText] = useState<string>('');
   const [canShare, setCanShare] = useState<boolean>(false);
@@ -63,6 +72,7 @@ const App: React.FC = () => {
       try {
         const savedState = JSON.parse(savedStateJSON);
         if (savedState.gender) setGender(savedState.gender);
+        if (savedState.aspectRatio) setAspectRatio(savedState.aspectRatio);
         if (savedState.customClothing) setCustomClothing(savedState.customClothing);
         if (savedState.marketingText) setMarketingText(savedState.marketingText);
         if (savedState.selectedTemplateTitle) {
@@ -107,6 +117,7 @@ const App: React.FC = () => {
       
       const stateToSave = {
         gender,
+        aspectRatio,
         customClothing,
         marketingText,
         selectedTemplateTitle: selectedTemplate.title,
@@ -121,7 +132,7 @@ const App: React.FC = () => {
     }, 100);
 
     return () => clearTimeout(handler);
-  }, [gender, customClothing, selectedTemplate, previewUrl, imageFile, clothingImagePreviewUrl, clothingImageFile, hairstyleImagePreviewUrl, hairstyleImageFile, marketingText]);
+  }, [gender, aspectRatio, customClothing, selectedTemplate, previewUrl, imageFile, clothingImagePreviewUrl, clothingImageFile, hairstyleImagePreviewUrl, hairstyleImageFile, marketingText]);
 
   // Efeito para verificar o suporte à API de Compartilhamento Web
   useEffect(() => {
@@ -188,7 +199,7 @@ const App: React.FC = () => {
     setGeneratedImageUrl(null);
 
     try {
-      const prompt = selectedTemplate.prompt(gender, customClothing || undefined, !!clothingImageFile, !!hairstyleImageFile, marketingText || undefined);
+      const prompt = selectedTemplate.prompt(gender, customClothing || undefined, !!clothingImageFile, !!hairstyleImageFile, marketingText || undefined, aspectRatio);
       const resultUrl = await editImageWithGemini(imageFile, clothingImageFile, hairstyleImageFile, prompt);
       
       setGeneratedImageUrl(resultUrl);
@@ -209,7 +220,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [imageFile, clothingImageFile, hairstyleImageFile, selectedTemplate, gender, customClothing, marketingText]);
+  }, [imageFile, clothingImageFile, hairstyleImageFile, selectedTemplate, gender, customClothing, marketingText, aspectRatio]);
   
   const handleShare = async () => {
     if (!generatedImageUrl) return;
@@ -242,7 +253,9 @@ const App: React.FC = () => {
   const isMarketingTemplate = selectedTemplate.title === 'Visionário de Marketing (Contratando)';
   const isPosterTemplate = selectedTemplate.title === 'Pôster de Moda (Vermelho)';
   const hasCustomTextInput = isMarketingTemplate || isPosterTemplate;
-  const stepOffset = hasCustomTextInput ? 1 : 0;
+  
+  const baseStepNumber = 3;
+  const customTextStep = hasCustomTextInput ? 1 : 0;
 
 
   return (
@@ -263,10 +276,33 @@ const App: React.FC = () => {
               className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600 cursor-pointer"
             />
           </div>
+          
+          <div>
+             <label className="block text-lg font-medium text-gray-300 mb-2">
+              2. Formato da Imagem
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+                {ASPECT_RATIO_OPTIONS.map(option => (
+                    <button
+                        key={option.value}
+                        onClick={() => setAspectRatio(option.value)}
+                        className={`p-2 flex flex-col items-center justify-center gap-1 rounded-lg text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500
+                        ${aspectRatio === option.value
+                            ? 'bg-blue-600 text-white shadow-md'
+                            : 'bg-gray-700 hover:bg-gray-600'
+                        }`}
+                        title={`${option.label} (${option.value})`}
+                    >
+                        <div className="w-6 h-6">{option.icon}</div>
+                        <span>{option.label}</span>
+                    </button>
+                ))}
+            </div>
+          </div>
 
           <div>
             <label className="block text-lg font-medium text-gray-300 mb-2">
-              2. Escolha um Estilo
+              {baseStepNumber}. Escolha um Estilo
             </label>
             <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2">
               {PROMPT_TEMPLATES.map(template => (
@@ -288,7 +324,7 @@ const App: React.FC = () => {
 
           <div>
             <label className="block text-lg font-medium text-gray-300 mb-2">
-              3. Gênero
+              {baseStepNumber + 1}. Gênero
             </label>
             <div className="flex gap-4">
               <button
@@ -309,7 +345,7 @@ const App: React.FC = () => {
           {hasCustomTextInput && (
             <div>
               <label htmlFor="marketing-text" className="block text-lg font-medium text-gray-300 mb-2">
-                4. Texto da Imagem (Opcional)
+                {baseStepNumber + 2}. Texto da Imagem (Opcional)
               </label>
               <textarea
                 id="marketing-text"
@@ -325,7 +361,7 @@ const App: React.FC = () => {
 
           <div>
             <label htmlFor="custom-clothing" className="block text-lg font-medium text-gray-300 mb-2">
-              {4 + stepOffset}. Roupas (Opcional)
+              {baseStepNumber + 2 + customTextStep}. Roupas (Opcional)
             </label>
             <input
               id="custom-clothing"
@@ -345,7 +381,7 @@ const App: React.FC = () => {
 
           <div>
             <label htmlFor="clothing-image-upload" className="block text-lg font-medium text-gray-300 mb-2">
-             {5 + stepOffset}. Usar Roupa de uma Imagem (Opcional)
+             {baseStepNumber + 3 + customTextStep}. Usar Roupa de uma Imagem (Opcional)
             </label>
             <input
               id="clothing-image-upload"
@@ -366,7 +402,7 @@ const App: React.FC = () => {
 
           <div>
             <label htmlFor="hairstyle-image-upload" className="block text-lg font-medium text-gray-300 mb-2">
-              {6 + stepOffset}. Usar Cabelo de uma Imagem (Opcional)
+              {baseStepNumber + 4 + customTextStep}. Usar Cabelo de uma Imagem (Opcional)
             </label>
             <input
               id="hairstyle-image-upload"
@@ -397,19 +433,19 @@ const App: React.FC = () => {
 
         {/* Conteúdo Principal: Pré-visualização & Resultado */}
         <div className="flex-1 p-6 flex flex-col items-center justify-center min-h-0">
-          <h2 className="text-2xl font-semibold mb-4 text-center">Sua Criação</h2>
+          <h2 className="text-2xl font-semibold mb-2 text-center">Sua Criação</h2>
+          <p className="text-gray-500 text-sm mb-4 text-center">Use o scroll do mouse ou o gesto de pinça para dar zoom.</p>
           {error && <p className="text-red-400 mb-4 text-center">{error}</p>}
 
-          <div className="w-full max-w-md aspect-square relative">
+          <div className="w-full max-w-md aspect-square relative bg-gray-950 rounded-lg shadow-lg">
             {isLoading ? (
               <div className="absolute inset-0 flex items-center justify-center">
                 <Loader />
               </div>
             ) : (
-              <img
+              <ZoomableImage
                 src={generatedImageUrl || previewUrl}
                 alt={generatedImageUrl ? 'Imagem Gerada' : 'Pré-visualização'}
-                className="w-full h-full object-contain rounded-lg"
               />
             )}
           </div>
