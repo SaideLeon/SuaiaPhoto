@@ -6,8 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LuxiaEstudio</title>
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#111827" />
+    <meta name="theme-color" content="#1e293b" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script type="importmap">
 {
   "imports": {
@@ -18,8 +21,38 @@
   }
 }
 </script>
+<style>
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: #1e293b; /* Fallback */
+    background-image: linear-gradient(135deg, #1e293b, #334155, #475569);
+    background-attachment: fixed;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-slideIn {
+    animation: slideIn 0.8s ease-out forwards;
+  }
+  /* Custom scrollbar for a better look */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+</style>
 </head>
-<body class="bg-gray-900 text-white">
+<body class="text-slate-100">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
 </body>

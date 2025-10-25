@@ -61,6 +61,7 @@ const App: React.FC = () => {
   const [aspectRatio, setAspectRatio] = useState<string>('1:1');
   const [customClothing, setCustomClothing] = useState<string>('');
   const [marketingText, setMarketingText] = useState<string>('');
+  const [refinementPrompt, setRefinementPrompt] = useState<string>('');
   const [canShare, setCanShare] = useState<boolean>(false);
 
 
@@ -143,6 +144,7 @@ const App: React.FC = () => {
         setImageFile(file);
         setGeneratedImageUrl(null);
         setError(null);
+        setRefinementPrompt('');
       });
     }
   };
@@ -171,11 +173,17 @@ const App: React.FC = () => {
 
     setIsLoading(true);
     setError(null);
-    // Não limpe generatedImageUrl aqui para manter a imagem antiga visível durante o carregamento
-
+    
     try {
-      const prompt = selectedTemplate.prompt(gender, customClothing || undefined, !!bodyImageFile, marketingText || undefined, aspectRatio);
-      const resultUrl = await editImageWithGemini(imageFile, bodyImageFile, prompt);
+      let finalPrompt: string;
+      
+      if (refinementPrompt.trim() !== '') {
+          finalPrompt = `Edite a imagem fornecida aplicando a seguinte instrução: "${refinementPrompt}". Preserve todos os outros elementos da imagem original que não estão diretamente relacionados à instrução. Mantenha o mesmo estilo, iluminação e qualidade fotográfica. Adicione o texto minimalista da marca 'LuxiaEstudio' em uma fonte sans-serif limpa e cinza claro no canto inferior direito. Garanta que a imagem final tenha uma proporção de ${aspectRatio}.`;
+      } else {
+          finalPrompt = selectedTemplate.prompt(gender, customClothing || undefined, !!bodyImageFile, marketingText || undefined, aspectRatio);
+      }
+
+      const resultUrl = await editImageWithGemini(imageFile, bodyImageFile, finalPrompt);
       
       setGeneratedImageUrl(resultUrl);
       setPreviewUrl(resultUrl);
@@ -184,6 +192,7 @@ const App: React.FC = () => {
       if (newFile) {
         setImageFile(newFile);
       }
+      setRefinementPrompt(''); // Limpa o prompt de refinamento após o uso
       
     } catch (err) {
       if (err instanceof Error) {
@@ -195,7 +204,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [imageFile, bodyImageFile, selectedTemplate, gender, customClothing, marketingText, aspectRatio]);
+  }, [imageFile, bodyImageFile, selectedTemplate, gender, customClothing, marketingText, aspectRatio, refinementPrompt]);
   
   const handleShare = async () => {
     if (!generatedImageUrl) return;
@@ -233,13 +242,16 @@ const App: React.FC = () => {
   let stepCounter = 1;
 
   return (
-    <div className="bg-gray-900 min-h-screen text-white font-sans flex flex-col">
+    <div className="h-screen font-sans flex flex-col relative overflow-hidden isolate">
+      <div className="absolute top-[-250px] right-[-250px] w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(148,163,184,0.1)_0%,transparent_70%)]" aria-hidden="true"></div>
+      <div className="absolute bottom-[-200px] left-[-200px] w-[400px] h-[400px] bg-[radial-gradient(circle,rgba(148,163,184,0.08)_0%,transparent_70%)]" aria-hidden="true"></div>
+      
       <Header />
-      <main className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <main className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden p-4 md:p-8 gap-8">
         {/* Sidebar: Controles & Input */}
-        <div className="order-2 md:order-1 w-full md:w-[400px] flex-shrink-0 bg-gray-800 p-4 md:p-6 flex flex-col gap-4 md:gap-6 md:overflow-y-auto">
+        <div className="animate-slideIn order-2 md:order-1 w-full md:w-[420px] lg:w-[450px] flex-shrink-0 bg-[rgba(255,255,255,0.05)] backdrop-blur-xl border border-[rgba(255,255,255,0.1)] rounded-[24px] shadow-2xl p-6 md:p-8 flex flex-col gap-6 md:overflow-y-auto">
           <div>
-            <label htmlFor="image-upload" className="block text-lg font-medium text-gray-300 mb-2">
+            <label htmlFor="image-upload" className="block text-lg font-medium text-slate-200 mb-2">
               {stepCounter++}. Imagem do Rosto
             </label>
             <input
@@ -247,12 +259,12 @@ const App: React.FC = () => {
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600 cursor-pointer"
+              className="block w-full text-sm text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-white/5 file:text-slate-100 hover:file:bg-white/10 cursor-pointer transition-colors"
             />
           </div>
           
           <div>
-             <label className="block text-lg font-medium text-gray-300 mb-2">
+             <label className="block text-lg font-medium text-slate-200 mb-2">
               {stepCounter++}. Formato da Imagem
             </label>
             <div className="grid grid-cols-4 gap-2">
@@ -260,10 +272,10 @@ const App: React.FC = () => {
                     <button
                         key={option.value}
                         onClick={() => setAspectRatio(option.value)}
-                        className={`p-2 flex flex-col items-center justify-center gap-1 rounded-lg text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500
+                        className={`p-2 flex flex-col items-center justify-center gap-1 backdrop-blur-md border rounded-xl text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-white/50
                         ${aspectRatio === option.value
-                            ? 'bg-blue-600 text-white shadow-md'
-                            : 'bg-gray-700 hover:bg-gray-600'
+                            ? 'bg-white/10 border-white/20 text-slate-50 shadow-md'
+                            : 'bg-white/[.03] border-white/[.08] text-slate-300 hover:bg-white/5'
                         }`}
                         title={`${option.label} (${option.value})`}
                     >
@@ -275,21 +287,21 @@ const App: React.FC = () => {
           </div>
           
           <div>
-            <label htmlFor="body-image-upload" className="block text-lg font-medium text-gray-300 mb-2">
-             {stepCounter++}. Imagem do Corpo e Pose (Opcional)
+            <label htmlFor="body-image-upload" className="block text-lg font-medium text-slate-200 mb-2">
+             {stepCounter++}. Corpo e Pose (Opcional)
             </label>
             <input
               id="body-image-upload"
               type="file"
               accept="image/*"
               onChange={handleBodyImageChange}
-              className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-500 file:text-white hover:file:bg-teal-600 cursor-pointer"
+              className="block w-full text-sm text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-400/10 file:text-teal-300 hover:file:bg-teal-400/20 cursor-pointer transition-colors"
             />
-            <p className="text-sm text-gray-500 mt-1">Use para definir o corpo, a pose e a roupa.</p>
+            <p className="text-sm text-slate-400 mt-1">Use para definir o corpo, a pose e a roupa.</p>
             {bodyImagePreviewUrl && (
                 <div className="mt-4 relative w-24">
-                    <img src={bodyImagePreviewUrl} alt="Pré-visualização do corpo" className="rounded-lg w-full h-auto" />
-                    <button onClick={handleRemoveBodyImage} className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 text-xs w-6 h-6 flex items-center justify-center font-bold">
+                    <img src={bodyImagePreviewUrl} alt="Pré-visualização do corpo" className="rounded-lg w-full h-auto border border-white/10" />
+                    <button onClick={handleRemoveBodyImage} className="absolute -top-2 -right-2 bg-red-600/50 backdrop-blur-sm border border-white/10 text-white rounded-full p-1 text-xs w-6 h-6 flex items-center justify-center font-bold">
                         X
                     </button>
                 </div>
@@ -297,7 +309,7 @@ const App: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-lg font-medium text-gray-300 mb-2">
+            <label className="block text-lg font-medium text-slate-200 mb-2">
               {stepCounter++}. Escolha um Estilo
             </label>
             <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2">
@@ -305,10 +317,10 @@ const App: React.FC = () => {
                 <button
                   key={template.title}
                   onClick={() => setSelectedTemplate(template)}
-                  className={`p-3 h-full rounded-lg text-sm text-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500
+                  className={`p-3 h-full rounded-xl text-sm text-center font-medium backdrop-blur-md border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-white/50
                     ${selectedTemplate.title === template.title
-                      ? 'bg-blue-600 text-white shadow-lg ring-2 ring-blue-400'
-                      : 'bg-gray-700 hover:bg-gray-600'
+                      ? 'bg-white/10 border-white/20 text-slate-50 shadow-lg'
+                      : 'bg-white/[.03] border-white/[.08] text-slate-300 hover:bg-white/5'
                     }`
                   }
                 >
@@ -319,19 +331,19 @@ const App: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-lg font-medium text-gray-300 mb-2">
+            <label className="block text-lg font-medium text-slate-200 mb-2">
               {stepCounter++}. Gênero
             </label>
             <div className="flex gap-4">
               <button
                 onClick={() => setGender('masculino')}
-                className={`px-4 py-2 rounded-lg flex-1 ${gender === 'masculino' ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'}`}
+                className={`px-4 py-2 rounded-xl flex-1 backdrop-blur-md border transition-colors ${gender === 'masculino' ? 'bg-white/10 border-white/20 text-slate-50' : 'bg-white/[.03] border-white/[.08] text-slate-300 hover:bg-white/5'}`}
               >
                 Masculino
               </button>
               <button
                 onClick={() => setGender('feminino')}
-                className={`px-4 py-2 rounded-lg flex-1 ${gender === 'feminino' ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'}`}
+                className={`px-4 py-2 rounded-xl flex-1 backdrop-blur-md border transition-colors ${gender === 'feminino' ? 'bg-white/10 border-white/20 text-slate-50' : 'bg-white/[.03] border-white/[.08] text-slate-300 hover:bg-white/5'}`}
               >
                 Feminino
               </button>
@@ -340,7 +352,7 @@ const App: React.FC = () => {
           
           {hasCustomTextInput && (
             <div>
-              <label htmlFor="marketing-text" className="block text-lg font-medium text-gray-300 mb-2">
+              <label htmlFor="marketing-text" className="block text-lg font-medium text-slate-200 mb-2">
                 {stepCounter++}. Texto da Imagem (Opcional)
               </label>
               <textarea
@@ -349,15 +361,15 @@ const App: React.FC = () => {
                 value={marketingText}
                 onChange={(e) => setMarketingText(e.target.value)}
                 placeholder={isPosterTemplate ? "Ex: MAKE IT HAPPEN." : "Ex: WE'RE HIRING, com 'HIRING' em destaque"}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full bg-slate-900/20 text-slate-200 border border-white/10 rounded-lg p-3 focus:ring-white/50 focus:border-white/50 transition"
               />
-              <p className="text-sm text-gray-500 mt-1">Deixe em branco para o texto padrão.</p>
+              <p className="text-sm text-slate-400 mt-1">Deixe em branco para o texto padrão.</p>
             </div>
           )}
 
           {!hasBodyImage && (
             <div>
-                <label htmlFor="custom-clothing" className="block text-lg font-medium text-gray-300 mb-2">
+                <label htmlFor="custom-clothing" className="block text-lg font-medium text-slate-200 mb-2">
                 {stepCounter++}. Roupas (Opcional)
                 </label>
                 <input
@@ -366,61 +378,78 @@ const App: React.FC = () => {
                 value={customClothing}
                 onChange={(e) => setCustomClothing(e.target.value)}
                 placeholder="Ex: um vestido vermelho elegante"
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full bg-slate-900/20 text-slate-200 border border-white/10 rounded-lg p-3 focus:ring-white/50 focus:border-white/50 transition"
                 />
-                <p className="text-sm text-gray-500 mt-1">Deixe em branco para usar a roupa padrão do estilo.</p>
+                <p className="text-sm text-slate-400 mt-1">Deixe em branco para usar a roupa padrão do estilo.</p>
             </div>
           )}
 
           <button
             onClick={handleGenerate}
             disabled={isLoading || !imageFile}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-transform transform hover:scale-105 mt-auto"
+            className="w-full mt-auto bg-white/10 backdrop-blur-md border border-white/20 text-slate-50 font-bold py-4 px-10 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 hover:bg-white/15 hover:border-white/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-white"
           >
             {isLoading ? 'Gerando...' : 'Gerar Imagem'}
           </button>
         </div>
 
         {/* Conteúdo Principal: Pré-visualização & Resultado */}
-        <div className="order-1 md:order-2 md:flex-1 p-4 md:p-6 flex flex-col items-center justify-start md:justify-center">
-          <h2 className="text-xl md:text-2xl font-semibold mb-2 text-center">Sua Criação</h2>
-          <p className="text-gray-500 text-sm mb-4 text-center">Use o scroll do mouse ou o gesto de pinça para dar zoom.</p>
-          {error && <p className="text-red-400 mb-4 text-center">{error}</p>}
+        <div className="animate-slideIn order-1 md:order-2 md:flex-1 p-4 md:p-6 flex flex-col items-center justify-start overflow-y-auto">
+          <h2 className="text-xl md:text-2xl font-semibold mb-2 text-center text-slate-100">Sua Criação</h2>
+          <p className="text-slate-400 text-sm mb-4 text-center">Use o scroll do mouse ou o gesto de pinça para dar zoom.</p>
+          {error && <p className="text-red-400 mb-4 text-center bg-red-500/10 p-3 rounded-lg border border-red-500/30">{error}</p>}
 
-          <div className="w-full max-w-md aspect-square relative bg-gray-950 rounded-lg shadow-lg">
+          <div className="w-full max-w-2xl aspect-square relative bg-white/[.03] backdrop-blur-lg border border-white/10 rounded-3xl shadow-2xl p-2">
             <ZoomableImage
               src={generatedImageUrl || previewUrl}
               alt={generatedImageUrl ? 'Imagem Gerada' : 'Pré-visualização'}
             />
             {isLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-950/70 rounded-lg backdrop-blur-sm z-10">
+              <div className="absolute inset-0 flex items-center justify-center bg-slate-950/70 rounded-3xl backdrop-blur-sm z-10">
                 <Loader />
               </div>
             )}
           </div>
           {generatedImageUrl && !isLoading && (
-            <div className="flex flex-col sm:flex-row gap-4 mt-6">
-              <a
-                href={generatedImageUrl}
-                download="imagem-gerada-luxiaestudio.png"
-                className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-                Salvar Imagem
-              </a>
-              {canShare && (
-                <button
-                  onClick={handleShare}
-                  className="flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-6 rounded-lg transition"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
-                  </svg>
-                  Compartilhar
-                </button>
-              )}
+            <div className="w-full max-w-2xl mt-6 flex flex-col gap-4 pb-8">
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <a
+                        href={generatedImageUrl}
+                        download="imagem-gerada-luxiaestudio.png"
+                        className="flex-1 flex items-center justify-center gap-2 bg-green-500/10 border border-green-400/30 text-green-300 hover:bg-green-500/20 hover:border-green-400/50 font-bold py-3 px-6 rounded-lg transition"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                        Salvar
+                    </a>
+                    {canShare && (
+                        <button
+                        onClick={handleShare}
+                        className="flex-1 flex items-center justify-center gap-2 bg-sky-500/10 border border-sky-400/30 text-sky-300 hover:bg-sky-500/20 hover:border-sky-400/50 font-bold py-3 px-6 rounded-lg transition"
+                        >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                        </svg>
+                        Compartilhar
+                        </button>
+                    )}
+                </div>
+                
+                <div>
+                    <label htmlFor="refinement-prompt" className="block text-lg font-medium text-slate-200 mb-2">
+                        Refine a Imagem (Opcional)
+                    </label>
+                    <textarea
+                        id="refinement-prompt"
+                        rows={2}
+                        value={refinementPrompt}
+                        onChange={(e) => setRefinementPrompt(e.target.value)}
+                        placeholder="Ex: mude a cor da camisa para azul, adicione um chapéu..."
+                        className="w-full bg-slate-900/20 text-slate-200 border border-white/10 rounded-lg p-3 focus:ring-white/50 focus:border-white/50 transition"
+                    />
+                    <p className="text-sm text-slate-400 mt-1">Descreva as alterações que você deseja fazer na imagem acima.</p>
+                </div>
             </div>
           )}
         </div>

@@ -150,7 +150,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({ src, alt }) => {
 
   return (
     <div 
-        className="w-full h-full relative overflow-hidden touch-none rounded-lg"
+        className="w-full h-full relative overflow-hidden touch-none rounded-2xl"
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -183,7 +183,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({ src, alt }) => {
       {scale > 1 && (
         <button 
           onClick={resetZoom}
-          className="absolute bottom-4 right-4 bg-gray-800/70 text-white p-2 rounded-full hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500 transition"
+          className="absolute bottom-4 right-4 bg-slate-900/30 backdrop-blur-sm text-white p-2 rounded-full hover:bg-slate-900/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-white transition"
           aria-label="Resetar zoom"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
