@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef, WheelEvent, MouseEvent, TouchEvent, useEffect } from 'react';
 
 interface ZoomableImageProps {
@@ -15,11 +16,28 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({ src, alt }) => {
   const touchStartDist = useRef(0);
   const startScale = useRef(1);
 
+  const [displaySrc, setDisplaySrc] = useState(src);
+  const [opacity, setOpacity] = useState(1);
+
   // Reset zoom/pan when image src changes
   useEffect(() => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
-  }, [src]);
+  }, [displaySrc]);
+
+  useEffect(() => {
+    if (src !== displaySrc) {
+      setOpacity(0);
+    }
+  }, [src, displaySrc]);
+
+  const handleTransitionEnd = () => {
+    if (opacity === 0) {
+      setDisplaySrc(src);
+      setOpacity(1);
+    }
+  };
+
 
   const handleWheel = (e: WheelEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -151,9 +169,14 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({ src, alt }) => {
         }}
       >
         <img
-            src={src}
+            src={displaySrc}
             alt={alt}
             className="w-full h-full object-contain"
+            style={{ 
+              opacity: opacity,
+              transition: 'opacity 0.3s ease-in-out'
+            }}
+            onTransitionEnd={handleTransitionEnd}
             draggable="false"
         />
       </div>

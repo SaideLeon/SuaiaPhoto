@@ -1,4 +1,5 @@
 
+
 import React, { useState, ChangeEvent, useCallback, useEffect } from 'react';
 import Header from './components/Header';
 import Loader from './components/Loader';
@@ -50,10 +51,8 @@ const ASPECT_RATIO_OPTIONS = [
 const App: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(DEFAULT_IMAGE_URL);
-  const [clothingImageFile, setClothingImageFile] = useState<File | null>(null);
-  const [clothingImagePreviewUrl, setClothingImagePreviewUrl] = useState<string | null>(null);
-  const [hairstyleImageFile, setHairstyleImageFile] = useState<File | null>(null);
-  const [hairstyleImagePreviewUrl, setHairstyleImagePreviewUrl] = useState<string | null>(null);
+  const [bodyImageFile, setBodyImageFile] = useState<File | null>(null);
+  const [bodyImagePreviewUrl, setBodyImagePreviewUrl] = useState<string | null>(null);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,19 +85,12 @@ const App: React.FC = () => {
             setImageFile(file);
           }
         }
-        if (savedState.clothingImagePreviewUrl) {
-            setClothingImagePreviewUrl(savedState.clothingImagePreviewUrl);
-            const file = dataURLtoFile(savedState.clothingImagePreviewUrl, savedState.clothingImageName || 'restored-clothing-image.png');
+        if (savedState.bodyImagePreviewUrl) {
+            setBodyImagePreviewUrl(savedState.bodyImagePreviewUrl);
+            const file = dataURLtoFile(savedState.bodyImagePreviewUrl, savedState.bodyImageName || 'restored-body-image.png');
             if (file) {
-                setClothingImageFile(file);
+                setBodyImageFile(file);
             }
-        }
-        if (savedState.hairstyleImagePreviewUrl) {
-          setHairstyleImagePreviewUrl(savedState.hairstyleImagePreviewUrl);
-          const file = dataURLtoFile(savedState.hairstyleImagePreviewUrl, savedState.hairstyleImageName || 'restored-hairstyle-image.png');
-          if (file) {
-            setHairstyleImageFile(file);
-          }
         }
       } catch (e) {
         console.error("Falha ao carregar ou analisar o estado do localStorage", e);
@@ -123,16 +115,14 @@ const App: React.FC = () => {
         selectedTemplateTitle: selectedTemplate.title,
         previewUrl: previewUrl,
         imageName: imageFile?.name,
-        clothingImagePreviewUrl: clothingImagePreviewUrl,
-        clothingImageName: clothingImageFile?.name,
-        hairstyleImagePreviewUrl: hairstyleImagePreviewUrl,
-        hairstyleImageName: hairstyleImageFile?.name,
+        bodyImagePreviewUrl: bodyImagePreviewUrl,
+        bodyImageName: bodyImageFile?.name,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
     }, 100);
 
     return () => clearTimeout(handler);
-  }, [gender, aspectRatio, customClothing, selectedTemplate, previewUrl, imageFile, clothingImagePreviewUrl, clothingImageFile, hairstyleImagePreviewUrl, hairstyleImageFile, marketingText]);
+  }, [gender, aspectRatio, customClothing, selectedTemplate, previewUrl, imageFile, bodyImagePreviewUrl, bodyImageFile, marketingText]);
 
   // Efeito para verificar o suporte à API de Compartilhamento Web
   useEffect(() => {
@@ -157,35 +147,20 @@ const App: React.FC = () => {
     }
   };
 
-  const handleClothingImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleBodyImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
         const file = e.target.files[0];
         fileToDataURL(file).then(dataUrl => {
-            setClothingImagePreviewUrl(dataUrl);
-            setClothingImageFile(file);
+            setBodyImagePreviewUrl(dataUrl);
+            setBodyImageFile(file);
             setCustomClothing(''); // Limpa texto para evitar confusão
         });
     }
   };
 
-  const handleRemoveClothingImage = () => {
-    setClothingImageFile(null);
-    setClothingImagePreviewUrl(null);
-  };
-
-  const handleHairstyleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-        const file = e.target.files[0];
-        fileToDataURL(file).then(dataUrl => {
-            setHairstyleImagePreviewUrl(dataUrl);
-            setHairstyleImageFile(file);
-        });
-    }
-  };
-
-  const handleRemoveHairstyleImage = () => {
-    setHairstyleImageFile(null);
-    setHairstyleImagePreviewUrl(null);
+  const handleRemoveBodyImage = () => {
+    setBodyImageFile(null);
+    setBodyImagePreviewUrl(null);
   };
 
   const handleGenerate = useCallback(async () => {
@@ -196,11 +171,11 @@ const App: React.FC = () => {
 
     setIsLoading(true);
     setError(null);
-    setGeneratedImageUrl(null);
+    // Não limpe generatedImageUrl aqui para manter a imagem antiga visível durante o carregamento
 
     try {
-      const prompt = selectedTemplate.prompt(gender, customClothing || undefined, !!clothingImageFile, !!hairstyleImageFile, marketingText || undefined, aspectRatio);
-      const resultUrl = await editImageWithGemini(imageFile, clothingImageFile, hairstyleImageFile, prompt);
+      const prompt = selectedTemplate.prompt(gender, customClothing || undefined, !!bodyImageFile, marketingText || undefined, aspectRatio);
+      const resultUrl = await editImageWithGemini(imageFile, bodyImageFile, prompt);
       
       setGeneratedImageUrl(resultUrl);
       setPreviewUrl(resultUrl);
@@ -220,7 +195,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [imageFile, clothingImageFile, hairstyleImageFile, selectedTemplate, gender, customClothing, marketingText, aspectRatio]);
+  }, [imageFile, bodyImageFile, selectedTemplate, gender, customClothing, marketingText, aspectRatio]);
   
   const handleShare = async () => {
     if (!generatedImageUrl) return;
@@ -253,10 +228,9 @@ const App: React.FC = () => {
   const isMarketingTemplate = selectedTemplate.title === 'Visionário de Marketing (Contratando)';
   const isPosterTemplate = selectedTemplate.title === 'Pôster de Moda (Vermelho)';
   const hasCustomTextInput = isMarketingTemplate || isPosterTemplate;
+  const hasBodyImage = !!bodyImageFile;
   
-  const baseStepNumber = 3;
-  const customTextStep = hasCustomTextInput ? 1 : 0;
-
+  let stepCounter = 1;
 
   return (
     <div className="bg-gray-900 min-h-screen text-white font-sans flex flex-col">
@@ -266,7 +240,7 @@ const App: React.FC = () => {
         <div className="order-2 md:order-1 w-full md:w-[400px] flex-shrink-0 bg-gray-800 p-4 md:p-6 flex flex-col gap-4 md:gap-6 md:overflow-y-auto">
           <div>
             <label htmlFor="image-upload" className="block text-lg font-medium text-gray-300 mb-2">
-              1. Envie sua Imagem
+              {stepCounter++}. Imagem do Rosto
             </label>
             <input
               id="image-upload"
@@ -279,7 +253,7 @@ const App: React.FC = () => {
           
           <div>
              <label className="block text-lg font-medium text-gray-300 mb-2">
-              2. Formato da Imagem
+              {stepCounter++}. Formato da Imagem
             </label>
             <div className="grid grid-cols-4 gap-2">
                 {ASPECT_RATIO_OPTIONS.map(option => (
@@ -299,10 +273,32 @@ const App: React.FC = () => {
                 ))}
             </div>
           </div>
+          
+          <div>
+            <label htmlFor="body-image-upload" className="block text-lg font-medium text-gray-300 mb-2">
+             {stepCounter++}. Imagem do Corpo e Pose (Opcional)
+            </label>
+            <input
+              id="body-image-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleBodyImageChange}
+              className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-500 file:text-white hover:file:bg-teal-600 cursor-pointer"
+            />
+            <p className="text-sm text-gray-500 mt-1">Use para definir o corpo, a pose e a roupa.</p>
+            {bodyImagePreviewUrl && (
+                <div className="mt-4 relative w-24">
+                    <img src={bodyImagePreviewUrl} alt="Pré-visualização do corpo" className="rounded-lg w-full h-auto" />
+                    <button onClick={handleRemoveBodyImage} className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 text-xs w-6 h-6 flex items-center justify-center font-bold">
+                        X
+                    </button>
+                </div>
+            )}
+          </div>
 
           <div>
             <label className="block text-lg font-medium text-gray-300 mb-2">
-              {baseStepNumber}. Escolha um Estilo
+              {stepCounter++}. Escolha um Estilo
             </label>
             <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2">
               {PROMPT_TEMPLATES.map(template => (
@@ -324,7 +320,7 @@ const App: React.FC = () => {
 
           <div>
             <label className="block text-lg font-medium text-gray-300 mb-2">
-              {baseStepNumber + 1}. Gênero
+              {stepCounter++}. Gênero
             </label>
             <div className="flex gap-4">
               <button
@@ -345,7 +341,7 @@ const App: React.FC = () => {
           {hasCustomTextInput && (
             <div>
               <label htmlFor="marketing-text" className="block text-lg font-medium text-gray-300 mb-2">
-                {baseStepNumber + 2}. Texto da Imagem (Opcional)
+                {stepCounter++}. Texto da Imagem (Opcional)
               </label>
               <textarea
                 id="marketing-text"
@@ -359,68 +355,22 @@ const App: React.FC = () => {
             </div>
           )}
 
-          <div>
-            <label htmlFor="custom-clothing" className="block text-lg font-medium text-gray-300 mb-2">
-              {baseStepNumber + 2 + customTextStep}. Roupas (Opcional)
-            </label>
-            <input
-              id="custom-clothing"
-              type="text"
-              value={customClothing}
-              onChange={(e) => {
-                setCustomClothing(e.target.value);
-                if (e.target.value && clothingImageFile) {
-                    handleRemoveClothingImage();
-                }
-              }}
-              placeholder="Ex: um vestido vermelho elegante"
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <p className="text-sm text-gray-500 mt-1">Deixe em branco para usar a roupa padrão do estilo.</p>
-          </div>
-
-          <div>
-            <label htmlFor="clothing-image-upload" className="block text-lg font-medium text-gray-300 mb-2">
-             {baseStepNumber + 3 + customTextStep}. Usar Roupa de uma Imagem (Opcional)
-            </label>
-            <input
-              id="clothing-image-upload"
-              type="file"
-              accept="image/*"
-              onChange={handleClothingImageChange}
-              className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-500 file:text-white hover:file:bg-teal-600 cursor-pointer"
-            />
-            {clothingImagePreviewUrl && (
-                <div className="mt-4 relative w-24">
-                    <img src={clothingImagePreviewUrl} alt="Pré-visualização da roupa" className="rounded-lg w-full h-auto" />
-                    <button onClick={handleRemoveClothingImage} className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 text-xs w-6 h-6 flex items-center justify-center font-bold">
-                        X
-                    </button>
-                </div>
-            )}
-          </div>
-
-          <div>
-            <label htmlFor="hairstyle-image-upload" className="block text-lg font-medium text-gray-300 mb-2">
-              {baseStepNumber + 4 + customTextStep}. Usar Cabelo de uma Imagem (Opcional)
-            </label>
-            <input
-              id="hairstyle-image-upload"
-              type="file"
-              accept="image/*"
-              onChange={handleHairstyleImageChange}
-              className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-500 file:text-white hover:file:bg-pink-600 cursor-pointer"
-            />
-            {hairstyleImagePreviewUrl && (
-                <div className="mt-4 relative w-24">
-                    <img src={hairstyleImagePreviewUrl} alt="Pré-visualização do cabelo" className="rounded-lg w-full h-auto" />
-                    <button onClick={handleRemoveHairstyleImage} className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 text-xs w-6 h-6 flex items-center justify-center font-bold">
-                        X
-                    </button>
-                </div>
-            )}
-          </div>
-
+          {!hasBodyImage && (
+            <div>
+                <label htmlFor="custom-clothing" className="block text-lg font-medium text-gray-300 mb-2">
+                {stepCounter++}. Roupas (Opcional)
+                </label>
+                <input
+                id="custom-clothing"
+                type="text"
+                value={customClothing}
+                onChange={(e) => setCustomClothing(e.target.value)}
+                placeholder="Ex: um vestido vermelho elegante"
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <p className="text-sm text-gray-500 mt-1">Deixe em branco para usar a roupa padrão do estilo.</p>
+            </div>
+          )}
 
           <button
             onClick={handleGenerate}
@@ -438,15 +388,14 @@ const App: React.FC = () => {
           {error && <p className="text-red-400 mb-4 text-center">{error}</p>}
 
           <div className="w-full max-w-md aspect-square relative bg-gray-950 rounded-lg shadow-lg">
-            {isLoading ? (
-              <div className="absolute inset-0 flex items-center justify-center">
+            <ZoomableImage
+              src={generatedImageUrl || previewUrl}
+              alt={generatedImageUrl ? 'Imagem Gerada' : 'Pré-visualização'}
+            />
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-950/70 rounded-lg backdrop-blur-sm z-10">
                 <Loader />
               </div>
-            ) : (
-              <ZoomableImage
-                src={generatedImageUrl || previewUrl}
-                alt={generatedImageUrl ? 'Imagem Gerada' : 'Pré-visualização'}
-              />
             )}
           </div>
           {generatedImageUrl && !isLoading && (
