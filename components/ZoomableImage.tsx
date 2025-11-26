@@ -61,6 +61,10 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({ src, alt }) => {
   };
 
   const handleMouseDown = (e: MouseEvent<HTMLDivElement>) => {
+    if (e.detail > 1) {
+      e.preventDefault();
+      return;
+    }
     if (scale <= 1 || e.button !== 0) return;
     e.preventDefault();
     setIsPanning(true);
@@ -144,6 +148,24 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({ src, alt }) => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
   };
+
+  const handleDoubleClick = (e: MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (scale > 1) {
+      resetZoom();
+    } else {
+      const newScale = 3;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      const newX = mouseX - (mouseX - position.x) * (newScale / scale);
+      const newY = mouseY - (mouseY - position.y) * (newScale / scale);
+
+      setScale(newScale);
+      setPosition({ x: newX, y: newY });
+    }
+  };
   
   const finalPosition = scale > 1 ? position : { x: 0, y: 0 };
   const cursorStyle = isPanning ? 'grabbing' : (scale > 1 ? 'grab' : 'default');
@@ -159,13 +181,14 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({ src, alt }) => {
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onDoubleClick={handleDoubleClick}
         style={{ cursor: cursorStyle }}
     >
       <div
         className="w-full h-full"
         style={{
           transform: `translate(${finalPosition.x}px, ${finalPosition.y}px) scale(${scale})`,
-          transition: isPanning ? 'none' : 'transform 0.1s ease-out',
+          transition: isPanning ? 'none' : 'transform 0.3s ease-out',
         }}
       >
         <img

@@ -1,7 +1,6 @@
-
 import type { PromptTemplate, Gender } from './types';
 
-export const DEFAULT_IMAGE_URL = "data:image/webp;base64,UklGRqACAABwXRUJQVlA4IIQCAABwHwCdASoZABkAPm0ylUekIqI8pqAAMAbEtLEwA/bi6if8r/yP9t/Yv+L/k/9r9gH8v/s/+l/yP+R/cP+L/n/9b/rv+J/y/+h/03/E/6H/Zf4L/yf9l/tP+Z/3//3/5n7AP5Z/UP+d/x/+L/03/Z/4//B/2f9//9P///9r8AP7f/pv+r/tP+l/1n/d/93///9n8AP/iWIAAAAAAAT8N8/r9Xv3T/Bf7/+v9f/0/5P+f/Lf6r/pf0D/J/mf7L9y/xv+d/q//T/tP8Z+9f8f/pf9F/fP+L/lf7//zf/H/z/9z/33/D/9/+p/////+gD//6sAAAACUN1/8hAAAAAAB4AAD++8gD+f38b+b9AAAARt4AAP7+WAD+/bgAAP7+WAD+/bgAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+//lQAAAAA";
+export const DEFAULT_IMAGE_URL = "data:image/webp;base64,UklGRqACAABwXRUJQVlA4IIQCAABwHwCdASoZABkAPm0ylUekIqI8pqAAMAbEtLEwA/bi6if8r/yP9t/Yv+L/k/9r9gH8v/s/+l/yP+R/cP+L/n/9b/rv+J/y/+h/03/E/6H/Zf4L/yf9l/tP+Z/3//3/5n7AP5Z/UP+d/x/+L/03/Z/4//B/2f9//9P///9r8AP7f/pv+r/tP+l/1n/d/93///9n8AP/iWIAAAAAAAT8N8/r9Xv3T/Bf7/+v9f/0/5P+f/Lf6r/pf0D/J/mf7L9y/xv+d/q//T/tP8Z+9f8f/pf9F/fP+L/lf7//zf/H/z/9z/33/D/9/+p/////+gD//6sAAAACUN1/8hAAAAAAB4AAD++8gD+f38b+b9AAAARt4AAP7+WAD+/bgAAP7+WAD+/bgAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+/cwAAP79zAAA/v3MAAD+//lQAAAAA";
 
 const COMPOSITION_PROMPT_TEMPLATE = (sceneDescription: string, aspectRatio: string, brandTextColor: 'white' | 'light gray' = 'light gray') => `
 Crie uma nova imagem fotorrealista combinando o rosto da primeira imagem enviada com o corpo, a pose e as roupas da segunda imagem enviada. O rosto, o tom de pele e as características faciais do sujeito devem ser uma correspondência exata da primeira imagem. A estrutura corporal, as proporções, a pose e a roupa devem ser uma correspondência exata da segunda imagem.
@@ -15,6 +14,44 @@ Adicione o texto minimalista da marca 'LuxiaEstudio' em uma fonte limpa e ${bran
 `;
 
 export const PROMPT_TEMPLATES: PromptTemplate[] = [
+  {
+    title: "Reflexo Urbano (P&B)",
+    prompt: (gender: Gender, customClothing?: string, hasBodyImage?: boolean, _marketingText?: string, aspectRatio: string = '1:1') => {
+      const scene = `Um close-up dramático e ultrarrealista em preto e branco. A iluminação é cinematográfica de alto contraste vinda da lateral, destacando os contornos do rosto e projetando sombras profundas. O sujeito usa óculos de sol redondos e reflexivos que mostram o reflexo do horizonte de uma cidade (skyline). O sujeito olha com confiança para cima, para um vazio escuro. A atmosfera é misteriosa com um fundo preto minimalista. Detalhes em resolução 4K.`;
+      
+      if (hasBodyImage) {
+        return COMPOSITION_PROMPT_TEMPLATE(scene, aspectRatio, 'white');
+      }
+
+      const subject = gender === 'masculino' ? 'man' : 'woman';
+      const identityPreservation = "a estrutura facial exata, textura do cabelo e características do sujeito da foto original";
+      const defaultClothing = 'uma peça de roupa escura e minimalista';
+      const clothing = customClothing || defaultClothing;
+      const clothingInstruction = `O sujeito veste ${clothing}.`;
+
+      return `Edite a imagem para criar um close-up dramático e ultrarrealista em preto e branco de um(a) ${subject}, mantendo ${identityPreservation}. ${clothingInstruction} O sujeito deve usar óculos de sol redondos e reflexivos. Nas lentes dos óculos, deve haver o reflexo nítido do horizonte de uma cidade com arranha-céus. Aplique uma iluminação cinematográfica de alto contraste vinda da lateral, destacando os contornos do rosto e projetando sombras profundas e dramáticas. O sujeito deve olhar com confiança para cima, em direção a um vazio escuro. O fundo deve ser preto minimalista, criando uma atmosfera misteriosa. Garanta qualidade 4K e detalhes finos na pele e nos reflexos. Adicione o texto minimalista da marca 'LuxiaEstudio' em uma fonte sans-serif limpa e branca no canto inferior direito. Garanta que a imagem final tenha uma proporção de ${aspectRatio}.`;
+    }
+  },
+  {
+    title: "Terror no Escuro (IT)",
+    prompt: (gender: Gender, customClothing?: string, hasBodyImage?: boolean, _marketingText?: string, aspectRatio: string = '1:1') => {
+      const scene = `O sujeito está no escuro, segurando um isqueiro perto do rosto. A chama lança um brilho quente na expressão. Atrás do sujeito está Pennywise, o Palhaço Dançarino de IT, com o rosto aterrorizante iluminado pela mesma chama, sorrindo ameaçadoramente sobre o ombro. A atmosfera é cinematográfica e tensa, estilo terror de Halloween, contraste forte de iluminação azul e laranja.`;
+
+      if (hasBodyImage) {
+        return COMPOSITION_PROMPT_TEMPLATE(scene, aspectRatio, 'white');
+      }
+
+      const subject = gender === 'masculino' ? 'man' : 'woman';
+      const possessivePronoun = gender === 'masculino' ? 'his' : 'her';
+      const objectPronoun = gender === 'masculino' ? 'him' : 'her';
+      const identityPreservation = "rosto real exato, penteado, tom de pele e estrutura/proporções corporais inalterados";
+      const defaultClothing = 'roupas casuais escuras';
+      const clothing = customClothing || defaultClothing;
+      const clothingInstruction = `O sujeito veste ${clothing}.`;
+
+      return `Edite a imagem enviada para retratar o mesmo sujeito como um(a) ${subject} (mantendo ${identityPreservation}) em pé no escuro, segurando um isqueiro perto do ${possessivePronoun} rosto. A chama do isqueiro deve lançar um brilho quente e detalhado na ${possessivePronoun} expressão. ${clothingInstruction} Atrás de ${objectPronoun}, em uma posição ameaçadora, está Pennywise, o Palhaço Dançarino do filme IT, com seu rosto aterrorizante parcialmente iluminado pela mesma chama, sorrindo ameaçadoramente sobre o ombro do sujeito. A atmosfera deve ser cinematográfica e tensa, estilo terror de Halloween. Use um forte contraste de iluminação azul (fundo/ambiente) e laranja (chama), texturas de pele ultra-realistas, 4K, profundidade de campo rasa e aparência de still de filme de terror. Adicione o texto minimalista da marca 'LuxiaEstudio' em uma fonte sans-serif limpa e branca no canto inferior direito. Garanta que a imagem final tenha uma proporção de ${aspectRatio}.`;
+    }
+  },
   {
     title: "Pessoa Moderna na Poltrona",
     prompt: (gender: Gender, customClothing?: string, hasBodyImage?: boolean, _marketingText?: string, aspectRatio: string = '1:1') => {
@@ -62,7 +99,7 @@ export const PROMPT_TEMPLATES: PromptTemplate[] = [
   {
     title: "Iluminação Neon (Azul e Vermelho)",
     prompt: (gender: Gender, customClothing?: string, hasBodyImage?: boolean, _marketingText?: string, aspectRatio: string = '1:1') => {
-      const scene = `O sujeito está em um retrato impressionante iluminado por uma dramática iluminação de duas cores. O rosto está dividido igualmente - um lado banhado por uma luz azul fria e o outro por uma tonalidade rosa/vermelha vibrante, produzindo um efeito visual de alto contraste, semelhante a neon. O sujeito está olhando diretamente para o espectador com uma expressão pensativa, com a mão esquerda apoiada no queixo. O fundo deve permanecer escuro e indistinto, desaparecendo sutilmente na sombra para enfatizar a iluminação colorida no rosto e na parte superior do corpo. O clima é cinematográfico e artístico.`;
+      const scene = `O sujeito está em um retrato impressionante, iluminado por uma dramática iluminação de duas cores. O rosto está dividido, com um lado banhado por uma luz azul fria e o outro por um tom vibrante de rosa/vermelho, criando um efeito de alto contraste semelhante ao neon. O sujeito olha diretamente para o espectador com uma expressão pensativa, com a mão esquerda apoiada no queixo. O fundo é escuro e indistinto, enfatizando a iluminação colorida no rosto e na parte superior do corpo.`;
       
       if (hasBodyImage) {
         return COMPOSITION_PROMPT_TEMPLATE(scene, aspectRatio);
@@ -72,12 +109,15 @@ export const PROMPT_TEMPLATES: PromptTemplate[] = [
       const possessivePronoun = gender === 'masculino' ? 'his' : 'her';
       const subjectPronoun = gender === 'masculino' ? 'He' : 'She';
       const H_is = possessivePronoun.charAt(0).toUpperCase() + possessivePronoun.slice(1);
-      const identityPreservation = "rosto real, expressão, penteado, tom de pele e estrutura/proporções corporais completamente inalterados";
+      
+      // Ênfase na preservação da identidade conforme solicitado
+      const identityPreservation = "NÃO MUDE O ROSTO. Mantenha o rosto real, expressão, penteado, barba (se houver), tom de pele e estrutura facial do sujeito completamente inalterados";
+      
       const defaultClothing = 'uma camiseta escura e um relógio no pulso esquerdo';
       const clothing = customClothing || defaultClothing;
-      const clothingInstruction = `${subjectPronoun} está usando ${clothing}.`;
+      const clothingInstruction = `${subjectPronoun} está vestindo ${clothing}.`;
 
-      return `Edite a imagem enviada para retratar o mesmo ${subject} (mantendo ${possessivePronoun} ${identityPreservation}) em um retrato impressionante iluminado por uma dramática iluminação de duas cores. ${H_is} rosto deve ser dividido igualmente - um lado banhado por uma luz azul fria e o outro por uma tonalidade rosa/vermelha vibrante, produzindo um efeito visual de alto contraste, semelhante a neon. ${subjectPronoun} deve estar olhando diretamente para o espectador com uma expressão pensativa, com ${possessivePronoun} mão esquerda apoiada no ${possessivePronoun} queixo. ${clothingInstruction} O fundo deve permanecer escuro e indistinto, desaparecendo sutilmente na sombra para enfatizar a iluminação colorida no ${possessivePronoun} rosto e na parte superior do corpo. Mantenha o fotorrealismo, preservando todos os detalhes faciais e anatômicos reais do sujeito original, modificando apenas a iluminação, a gradação de cores e a atmosfera para alcançar um visual cinematográfico e artístico. Adicione o texto minimalista da marca 'LuxiaEstudio' em uma fonte sans-serif limpa e cinza claro no canto inferior direito. Garanta que a imagem final tenha uma proporção de ${aspectRatio}.`;
+      return `Edite a imagem enviada para retratar o mesmo ${subject} (mantendo ${possessivePronoun} ${identityPreservation}) em um retrato impressionante iluminado por uma dramática iluminação de duas cores. ${H_is} rosto deve ser dividido - um lado banhado por uma luz azul fria e o outro por uma tonalidade rosa/vermelha vibrante, produzindo um efeito visual de alto contraste, semelhante a neon. ${subjectPronoun} deve estar olhando diretamente para o espectador com uma expressão pensativa, com ${possessivePronoun} mão esquerda apoiada no ${possessivePronoun} queixo. ${clothingInstruction} O fundo deve permanecer escuro e indistinto, desaparecendo sutilmente na sombra para enfatizar a iluminação colorida no ${possessivePronoun} rosto e na parte superior do corpo. Mantenha o fotorrealismo. Adicione o texto minimalista da marca 'LuxiaEstudio' em uma fonte sans-serif limpa e cinza claro no canto inferior direito. Garanta que a imagem final tenha uma proporção de ${aspectRatio}.`;
     }
   },
   {
@@ -215,142 +255,24 @@ export const PROMPT_TEMPLATES: PromptTemplate[] = [
     }
   },
   {
-    title: "Retrato de Poder (Vermelho)",
+    title: "Retrato Casual (Beanbag)",
     prompt: (gender: Gender, customClothing?: string, hasBodyImage?: boolean, _marketingText?: string, aspectRatio: string = '1:1') => {
-      const scene = `O retrato é caracterizado por uma iluminação cinematográfica forte e contraste intenso. Capturado em um ângulo ligeiramente baixo, voltado para cima, que dramatiza a linha da mandíbula e o pescoço do sujeito, a composição evoca dominância e elegância escultural. O fundo é um vermelho carmesim profundo e saturado, criando um choque visual ousado com a pele luminosa e o guarda-roupa escuro.`;
-      
-      if (hasBodyImage) {
-        return COMPOSITION_PROMPT_TEMPLATE(scene, aspectRatio, 'white');
-      }
-
-      const possessivePronoun = gender === 'masculino' ? 'his' : 'her';
-      const identityPreservation = "exatamente as mesmas características faciais, penteado, tom de pele e estrutura/proporções corporais";
-      const defaultClothing = 'roupas escuras e elegantes';
-      const clothing = customClothing || defaultClothing;
-      const clothingInstruction = `O sujeito veste ${clothing}.`;
-
-      return `Crie um retrato do sujeito enviado, mantendo ${identityPreservation}. O retrato é caracterizado por uma iluminação cinematográfica forte e contraste intenso. Capturado em um ângulo ligeiramente baixo, voltado para cima, que dramatiza a linha da mandíbula e o pescoço do sujeito, a composição evoca dominância e elegância escultural. ${clothingInstruction} O fundo é um vermelho carmesim profundo e saturado, criando um choque visual ousado com a ${possessivePronoun} pele luminosa e o guarda-roupa escuro. Adicione o texto minimalista da marca 'LuxiaEstudio' em uma fonte sans-serif limpa e branca no canto inferior direito. Garanta que a imagem final tenha uma proporção de ${aspectRatio}.`;
-    }
-  },
-  {
-    title: "Silhueta Monocromática",
-    prompt: (gender: Gender, customClothing?: string, hasBodyImage?: boolean, _marketingText?: string, aspectRatio: string = '1:1') => {
-      const scene = `A cena é um retrato de perfil lateral monocromático. Apresenta uma iluminação de contorno dramática que destaca as bordas do cabelo and rosto. O fundo desaparece completamente na escuridão, criando um contraste suave mas poderoso que enfatiza a silhueta. O clima geral é artístico, introspectivo e cinematográfico, com um forte efeito de chiaroscuro. A imagem é em preto e branco.`;
-      
-      if (hasBodyImage) {
-        return COMPOSITION_PROMPT_TEMPLATE(scene, aspectRatio);
-      }
-
-      const possessivePronoun = gender === 'masculino' ? 'his' : 'her';
-      const subject = gender === 'masculino' ? 'man' : 'woman';
-      const identityPreservation = "rosto real exato, penteado, tom de pele e estrutura/proporções corporais inalterados";
-      const defaultClothing = 'uma camisa escura simples';
-      const clothing = customClothing || defaultClothing;
-      const clothingInstruction = `O sujeito veste ${clothing}.`;
-
-      return `Edite a imagem enviada para criar um retrato de perfil lateral monocromático do(a) mesmo(a) ${subject}, mantendo ${identityPreservation}. ${clothingInstruction} A foto deve apresentar uma iluminação de contorno dramática que destaca as bordas do ${possessivePronoun} cabelo e rosto. O fundo deve desaparecer completamente na escuridão, criando um contraste suave mas poderoso que enfatiza a ${possessivePronoun} silhueta. O clima geral deve ser artístico, introspectivo e cinematográfico, com um forte efeito de chiaroscuro. A imagem deve ser em preto e branco, fotorrealista e com detalhes finos nas áreas iluminadas. Adicione o texto minimalista da marca 'LuxiaEstudio' em uma fonte sans-serif limpa e cinza claro no canto inferior direito. Garanta que a imagem final tenha uma proporção de ${aspectRatio}.`;
-    }
-  },
-  {
-    title: "Selfie no Espelho (Cinemático)",
-    prompt: (gender: Gender, customClothing?: string, hasBodyImage?: boolean, _marketingText?: string, aspectRatio: string = '1:1') => {
-      const scene = `É uma selfie no espelho ultra-realista. O sujeito usa óculos e segura um novo e moderno smartphone iPhone 17 na cor laranja em uma mão, cobrindo parcialmente o rosto, enquanto a outra mão descansa casualmente no bolso. A cena é ambientada em uma iluminação interna quente, criando uma atmosfera cinematográfica e sombria com sombras suaves.`;
+      const scene = `O sujeito está sentado com confiança em um pufe preto redondo. A pose é relaxada e forte, com os cotovelos apoiados nos joelhos e as mãos penduradas frouxamente entre as pernas. O fundo é um gradiente escuro minimalista, com iluminação dramática e direcional focada no rosto e no corpo, enquanto o fundo desaparece na escuridão. O estilo é de fotografia de estúdio moderna, minimalista e poderosa, com alto contraste.`;
       
       if (hasBodyImage) {
         return COMPOSITION_PROMPT_TEMPLATE(scene, aspectRatio);
       }
 
       const subject = gender === 'masculino' ? 'man' : 'woman';
-      const possessivePronoun = gender === 'masculino' ? 'his' : 'her';
-      const identityPreservation = "rosto real exato, penteado, tom de pele e estrutura/proporções corporais inalterados";
-      const defaultClothing = 'um suéter branco solto sobre uma camiseta branca, combinado com jeans escuros';
-      const clothing = customClothing || defaultClothing;
-      const clothingInstruction = `O sujeito está vestindo ${clothing}.`;
-
-      return `Use a foto enviada para criar uma selfie no espelho ultra-realista de um(a) ${subject} estiloso(a) com óculos, mantendo ${identityPreservation}. ${clothingInstruction} O sujeito segura um novo e moderno smartphone iPhone 17 na cor laranja em uma mão, cobrindo parcialmente ${possessivePronoun} rosto, enquanto ${possessivePronoun} outra mão descansa casualmente no ${possessivePronoun} bolso. A cena é ambientada em uma iluminação interna quente, criando uma atmosfera cinematográfica e sombria com sombras suaves. A imagem final deve ser fotorrealista com detalhes finos. Adicione o texto minimalista da marca 'LuxiaEstudio' em uma fonte sans-serif limpa e cinza claro no canto inferior direito. Garanta que a imagem final tenha uma proporção de ${aspectRatio}.`;
-    }
-  },
-  {
-    title: "Visionário de Marketing (Contratando)",
-    prompt: (gender: Gender, customClothing?: string, hasBodyImage?: boolean, marketingText?: string, aspectRatio: string = '1:1') => {
-      const defaultTypography = `"ESTAMOS CONTRATANDO" com "CONTRATANDO" destacado em uma caixa azul elétrico, seguido por "profissionais de marketing digital" e "#mentes criativas procuradas" em uma fonte sans-serif contemporânea`;
-      const typographyInstruction = `O lado esquerdo exibe uma tipografia atraente: ${marketingText || defaultTypography}.`;
-      
-      const scene = `O sujeito está em uma pose de pensamento criativo com uma mão tocando o queixo de forma pensativa, a outra mão segurando um laptop aberto na altura da cintura, em uma postura de três quartos com uma expressão visionária e entusiasmada. O fundo é branco puro que se desvanece para um gradiente verde menta suave. Elementos visuais de marketing digital flutuam ao redor: ícones de plataformas de mídia social (Instagram, LinkedIn, Facebook, TikTok) em suas cores características, gráficos minimalistas de megafone, símbolos de gráficos de análise ascendentes, ícones de engajamento como corações e bolhas de comentários, símbolos de alvo/bullseye e símbolos de arroba. Crachás de métricas coloridos mostrando números de crescimento (+2.5k, +850). Linhas de conexão e nós entre os ícones sugerem campanhas integradas. Pequenos acentos de raio e estrela em azul e verde adicionam energia criativa. ${typographyInstruction} No canto superior esquerdo, há um ícone de campanha ou estratégia. A estética geral é inovadora, orientada por dados, mas criativa, com uma energia de recrutamento profissional do LinkedIn.`;
-      
-      if (hasBodyImage) {
-        return COMPOSITION_PROMPT_TEMPLATE(scene, aspectRatio);
-      }
-      
-      const subject = gender === 'masculino' ? 'man' : 'woman';
-      const subjectPronoun = gender === 'masculino' ? 'He\'s' : 'She\'s';
-      const possessivePronoun = gender === 'masculino' ? 'his' : 'her';
       const objectPronoun = gender === 'masculino' ? 'him' : 'her';
-      const identityPreservation = "rosto real exato, penteado, tom de pele e estrutura/proporções corporais inalterados";
-      const defaultClothing = gender === 'masculino' 
-        ? 'um moderno blazer azul elétrico sobre uma camisa henley branca casual'
-        : 'um moderno blazer azul elétrico sobre uma blusa branca casual';
-      const clothing = customClothing || defaultClothing;
-      const clothingInstruction = `${subjectPronoun} vestindo ${clothing} para um apelo profissional criativo.`;
-
-      return `Edite esta imagem para mostrar um(a) profissional inovador(a) ${subject} (mantendo ${identityPreservation}) em uma pose de pensamento criativo com uma mão tocando ${possessivePronoun} queixo de forma pensativa, a outra mão segurando um laptop aberto na altura da cintura, em uma postura de três quartos com uma expressão visionária e entusiasmada. ${clothingInstruction} O fundo é branco puro que se desvanece para um gradiente verde menta suave. Elementos visuais de marketing digital flutuam ao redor ${objectPronoun}: ícones de plataformas de mídia social (Instagram, LinkedIn, Facebook, TikTok) em suas cores características, gráficos minimalistas de megafone, símbolos de gráficos de análise ascendentes, ícones de engajamento como corações e bolhas de comentários, símbolos de alvo/bullseye e símbolos de arroba. Crachás de métricas coloridos mostrando números de crescimento (+2.5k, +850). Linhas de conexão e nós entre os ícones sugerem campanhas integradas. Pequenos acentos de raio e estrela em azul e verde adicionam energia criativa. ${typographyInstruction} No canto superior esquerdo, há um ícone de campanha ou estratégia. A estética geral é inovadora, orientada por dados, mas criativa, com uma energia de recrutamento profissional do LinkedIn. Renderização fotorrealista com iluminação vibrante e envolvente, estilo de agência digital e estética moderna de aquisição de talentos de marketing. Adicione o texto minimalista da marca 'LuxiaEstudio' em uma fonte sans-serif limpa e cinza claro no canto inferior direito. Garanta que a imagem final tenha uma proporção de ${aspectRatio}.`;
-    }
-  },
-  {
-    title: "Pôster de Moda (Vermelho)",
-    prompt: (gender: Gender, customClothing?: string, hasBodyImage?: boolean, marketingText?: string, aspectRatio: string = '1:1') => {
-      const typographyText = marketingText || 'MAKE IT HAPPEN.';
-      const scene = `É um pôster de editorial de moda de estúdio. O sujeito está sentado com confiança em uma cadeira de design moderno. O fundo é um vermelho puro com uma leve textura. A composição inclui uma tipografia branca, grande e em negrito, na parte superior, que diz '${typographyText}'. A estética geral deve ser nítida, vibrante e refletir um design de alta moda.`;
-
-      if (hasBodyImage) {
-        return COMPOSITION_PROMPT_TEMPLATE(scene, aspectRatio, 'white');
-      }
-
-      const subject = gender === 'masculino' ? 'man' : 'woman';
-      const identityPreservation = "rosto real exato, penteado, tom de pele e estrutura/proporções corporais inalterados";
-      const defaultClothing = 'uma roupa monocromática vermelha completa, incluindo um moletom oversized, calças de moletom e tênis';
-      const clothing = customClothing || defaultClothing;
-      const clothingInstruction = `O sujeito está vestindo ${clothing}.`;
-      
-      return `Crie um pôster de editorial de moda de estúdio com o(a) jovem ${subject} enviado(a), mantendo ${identityPreservation}. O sujeito deve estar sentado com confiança em uma cadeira de design moderno. ${clothingInstruction} O fundo deve ser um vermelho puro com uma leve textura. A composição deve incluir uma tipografia branca, grande e em negrito, na parte superior, que diz '${typographyText}'. A estética geral deve ser nítida, vibrante e refletir um design de alta moda. A imagem final deve ser fotorrealista com uma qualidade de alta qualidade e polida. Adicione o texto minimalista da marca 'LuxiaEstudio' em uma fonte sans-serif limpa e branca no canto inferior direito. Garanta que a imagem final tenha uma proporção de ${aspectRatio}.`;
-    }
-  },
-  {
-    title: "Princesa na Poltrona (Rosa)",
-    prompt: (gender: Gender, customClothing?: string, hasBodyImage?: boolean, _marketingText?: string, aspectRatio: string = '1:1') => {
-      const scene = `O sujeito é retratado como uma criança de 2 anos sentada no centro de uma poltrona de encosto alto em um ambiente de estúdio minimalista e monocromático. O fundo é uma parede e chão contínuos em uma cor rosa queimado sólida. A poltrona também combina com essa cor para criar um efeito monocromático contínuo. Os sapatos são limpos e brancos. Os pés não tocam o chão devido à altura da poltrona, com as mãos suavemente entrelaçadas no colo. A iluminação é suave, uniforme e de estúdio, com sombras mínimas. A imagem final deve ser de altíssima resolução, elegante, moderna e minimalista, no estilo da fotografia de retrato de alta moda.`;
-      
-      if (hasBodyImage) {
-        return COMPOSITION_PROMPT_TEMPLATE(scene, aspectRatio, 'white');
-      }
-
-      const subject = gender === 'masculino' ? 'boy' : 'girl';
       const possessivePronoun = gender === 'masculino' ? 'his' : 'her';
-      const identityPreservation = "características faciais e tom de pele exatos, mas reimaginando-os como uma criança de 2 anos, preservando a essência de sua estrutura corporal na versão infantil";
-      const defaultClothing = gender === 'masculino' 
-        ? 'um terno branco elegante com detalhes sutis de joias e uma pequena e elegante coroa' 
-        : 'um vestido de dama de honra branco com flores e joias e uma coroa combinando';
+      const subjectPronoun = gender === 'masculino' ? 'He' : 'She';
+      const identityPreservation = "seu rosto real exato, penteado e estrutura facial inalterados";
+      const defaultClothing = 'um moletom preto com as mangas ligeiramente puxadas para cima, calças cargo pretas, tênis brancos limpos e um relógio de pulso prateado no pulso esquerdo';
       const clothing = customClothing || defaultClothing;
-      const clothingInstruction = `Vista o sujeito com ${clothing}.`;
+      const clothingInstruction = `Vista ${objectPronoun} com ${clothing}.`;
 
-      return `Converta a imagem enviada, mantendo ${identityPreservation} do sujeito. O sujeito deve ser retratado como um(a) ${subject} de 2 anos sentado(a) no centro de uma poltrona de encosto alto em um ambiente de estúdio minimalista e monocromático. Substitua o fundo atual por uma parede e chão contínuos em uma cor rosa queimado sólida. A poltrona também deve combinar com essa cor para criar um efeito monocromático contínuo. ${clothingInstruction} Os sapatos do sujeito devem ser limpos e brancos. Posicione-os de forma que ${possessivePronoun} pés não toquem o chão devido à altura da poltrona, com ${possessivePronoun} mãos suavemente entrelaçadas no ${possessivePronoun} colo. A iluminação deve ser suave, uniforme e de estúdio, com sombras mínimas. A imagem final deve ser de altíssima resolução, elegante, moderna e minimalista, no estilo da fotografia de retrato de alta moda. Adicione o texto minimalista da marca 'LuxiaEstudio' em uma fonte sans-serif limpa e branca no canto inferior direito. Garanta que a imagem final tenha uma proporção de ${aspectRatio}.`;
-    }
-  },
-  {
-    title: "Horror Cinematográfico (IT)",
-    prompt: (gender: Gender, customClothing?: string, hasBodyImage?: boolean, _marketingText?: string, aspectRatio: string = '1:1') => {
-      const scene = `É uma cena de filme de terror cinematográfico de Halloween. O sujeito está em pé no escuro, segurando um isqueiro perto do rosto. A chama do isqueiro lança um brilho quente e bruxuleante em sua expressão tensa. Atrás do sujeito, Pennywise, o Palhaço Dançarino do filme 'IT', assoma, seu rosto aterrorizante também iluminado pela mesma chama, sorrindo ameaçadoramente por cima do ombro do sujeito. A atmosfera é tensa e cinematográfica. A iluminação é um forte contraste de azul e laranja, com uma profundidade de campo rasa.`;
-      
-      if (hasBodyImage) {
-        return COMPOSITION_PROMPT_TEMPLATE(scene, aspectRatio);
-      }
-      
-      const identityPreservation = "rosto real exato, expressão e estrutura/proporções corporais completamente inalterados";
-      const defaultClothing = 'roupas escuras e casuais adequadas para uma cena escura';
-      const clothing = customClothing || defaultClothing;
-      const clothingInstruction = `Vista o sujeito com ${clothing}.`;
-
-      return `Edite a imagem enviada para criar uma cena de filme de terror cinematográfico de Halloween. O sujeito (mantendo ${identityPreservation}) está em pé no escuro, segurando um isqueiro perto do rosto. A chama do isqueiro lança um brilho quente e bruxuleante em sua expressão tensa. Atrás do sujeito, Pennywise, o Palhaço Dançarino do filme 'IT', assoma, seu rosto aterrorizante também iluminado pela mesma chama, sorrindo ameaçadoramente por cima do ombro do sujeito. A atmosfera é tensa e cinematográfica. A iluminação é um forte contraste de azul e laranja. A imagem final deve ser ultrarrealista, com textura de pele detalhada, resolução 4K e uma profundidade de campo rasa. ${clothingInstruction} Adicione o texto minimalista da marca 'LuxiaEstudio' em uma fonte sans-serif limpa e cinza claro no canto inferior direito. Garanta que a imagem final tenha uma proporção de ${aspectRatio}.`;
+      return `Edite a imagem enviada para retratar o mesmo sujeito como um(a) ${subject} (mantendo ${identityPreservation}) sentado(a) com confiança em um pufe preto redondo contra um fundo de gradiente escuro. ${subjectPronoun} deve ter uma pose relaxada e forte, com os cotovelos apoiados nos joelhos e as mãos penduradas frouxamente entre as pernas. ${clothingInstruction} A expressão facial deve ser calma, com um leve sorriso. A iluminação deve ser dramática e direcional, iluminando o rosto, os tênis e a parte superior do corpo, enquanto o fundo desaparece na escuridão. A atmosfera deve ser moderna, minimalista e poderosa, com estilo de fotografia de estúdio e alto contraste. Adicione o texto minimalista da marca 'LuxiaEstudio' em uma fonte sans-serif limpa e cinza claro no canto inferior direito. Garanta que a imagem final tenha uma proporção de ${aspectRatio}.`;
     }
   }
 ];
